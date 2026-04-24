@@ -281,7 +281,7 @@ const levels = [
   {
     name: '心动 · 夏夜',
     target: 15,
-    speed: 1.76,
+    speed: 1.4,
     spawnRate: 42,
     obstacleRate: 130, // 偶尔出现障碍
     bgColor1: '#1a1a3e',
@@ -293,7 +293,7 @@ const levels = [
   {
     name: '陪伴 · 秋叶',
     target: 18,
-    speed: 2.14,
+    speed: 1.7,
     spawnRate: 34,
     obstacleRate: 90,
     bgColor1: '#3d1c00',
@@ -358,11 +358,12 @@ class FallingHeart {
     const colors = ['#ff6b9d','#ff4081','#e91e63','#ff8a80','#f48fb1','#ff80ab'];
     this.color = colors[Math.floor(Math.random() * colors.length)];
   }
-  update() {
-    this.y += this.speed;
-    this.wobble += this.wobbleSpeed;
-    this.x += Math.sin(this.wobble) * this.wobbleAmp;
-    this.rotation += this.rotSpeed;
+  update(dt) {
+    // dt 是与 60fps 的比例，保证不同帧率下速度一致
+    this.y += this.speed * dt;
+    this.wobble += this.wobbleSpeed * dt;
+    this.x += Math.sin(this.wobble) * this.wobbleAmp * dt;
+    this.rotation += this.rotSpeed * dt;
     // 爱心过了碗的位置（H()-50）才算漏接，而不是掉出屏幕
     const missLine = window.innerHeight - 50;
     if (this.y > missLine && !this.missed) {
@@ -401,11 +402,11 @@ class Obstacle {
     this.rotSpeed = (Math.random() - .5) * .08;
     this.alive = true;
   }
-  update() {
-    this.y += this.speed;
-    this.wobble += this.wobbleSpeed;
-    this.x += Math.sin(this.wobble) * 2;
-    this.rotation += this.rotSpeed;
+  update(dt) {
+    this.y += this.speed * dt;
+    this.wobble += this.wobbleSpeed * dt;
+    this.x += Math.sin(this.wobble) * 2 * dt;
+    this.rotation += this.rotSpeed * dt;
     if (this.y > H() + 30) this.alive = false;
   }
   draw(c) {
@@ -572,11 +573,23 @@ function showComboEffect(x, y) {
 
 // ====== 主游戏循环 ======
 let frameCount = 0;
-function gameLoop() {
+let lastFrameTime = 0;
+function gameLoop(now) {
   if (gameState !== 'playing') return;
   animId = requestAnimationFrame(gameLoop);
-  frameCount++;
-  if (invincibleFrames > 0) invincibleFrames--;
+
+  // 计算 dt：以 60fps (1000/60≈16.67ms) 为基准
+  // 这样无论手机是 60Hz 还是 120Hz，速度都保持一致
+  if (!lastFrameTime) lastFrameTime = now || performance.now();
+  const nowT = now || performance.now();
+  let dt = (nowT - lastFrameTime) / (1000 / 60);
+  lastFrameTime = nowT;
+  // 防止切后台/卡顿后 dt 过大导致"瞬移"
+  if (dt > 3) dt = 3;
+  if (dt <= 0) dt = 1;
+
+  frameCount += dt;
+  if (invincibleFrames > 0) invincibleFrames -= dt;
 
   const lv = levels[currentLevel];
   ctx.clearRect(0, 0, W(), H());
@@ -594,8 +607,8 @@ function gameLoop() {
   // 随时间缓慢加速（已削弱：加速更慢，且设上限+15%）
   speedMultiplier = Math.min(1.15, 1 + (frameCount / 12000) * 0.25);
 
-  // 生成爱心
-  spawnTimer++;
+  // 生成爱心（按真实时间推进，与帧率无关）
+  spawnTimer += dt;
   if (spawnTimer >= lv.spawnRate) {
     spawnTimer = 0;
     hearts.push(new FallingHeart(lv, speedMultiplier));
@@ -603,7 +616,7 @@ function gameLoop() {
 
   // 生成障碍物
   if (lv.obstacleRate > 0) {
-    obstacleTimer++;
+    obstacleTimer += dt;
     if (obstacleTimer >= lv.obstacleRate) {
       obstacleTimer = 0;
       obstacles.push(new Obstacle(lv, speedMultiplier));
@@ -611,8 +624,8 @@ function gameLoop() {
   }
 
   // 更新
-  hearts.forEach(h => h.update());
-  obstacles.forEach(o => o.update());
+  hearts.forEach(h => h.update(dt));
+  obstacles.forEach(o => o.update(dt));
 
   // 移动篮子
   catcher.x += (touchX - catcher.x) * .15;
@@ -819,6 +832,7 @@ function startPlaying() {
   spawnTimer = 0;
   obstacleTimer = 0;
   frameCount = 0;
+  lastFrameTime = 0;
   speedMultiplier = 1;
   combo = 0;
   missCount = 0;
