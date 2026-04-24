@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="format-detection" content="telephone=no">
+<title>💕</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+html{height:100%;overflow:hidden}
+body{font-family:-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;overflow:hidden;position:fixed;width:100%;height:100%;top:0;left:0;-webkit-overflow-scrolling:touch}
+canvas{display:block;position:absolute;top:0;left:0;touch-action:none;-ms-touch-action:none}
+
+.screen{position:fixed;top:0;left:0;width:100%;height:var(--vh,100%);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;transition:opacity .8s,transform .8s;-webkit-transition:opacity .8s,-webkit-transform .8s}
+.screen.hidden{opacity:0;pointer-events:none;transform:scale(1.05)}
+
+#startScreen{background:linear-gradient(135deg,#ff9a9e 0%,#fecfef 50%,#fdfcfb 100%)}
+.start-heart{font-size:100px;animation:heartbeat 1.2s ease-in-out infinite}
+@keyframes heartbeat{0%,100%{transform:scale(1)}15%{transform:scale(1.15)}30%{transform:scale(1)}45%{transform:scale(1.1)}}
+.start-title{font-size:32px;font-weight:900;color:#e74c7c;margin:20px 0 8px;text-shadow:0 2px 10px rgba(231,76,124,.3)}
+.start-sub{font-size:16px;color:#c0392b;opacity:.7;margin-bottom:35px}
+.btn{padding:16px 55px;font-size:18px;font-weight:700;border:none;border-radius:50px;cursor:pointer;transition:all .2s;letter-spacing:2px}
+.btn:active{transform:scale(.96)}
+.btn-start{background:linear-gradient(135deg,#e74c7c,#e91e63);color:#fff;box-shadow:0 8px 25px rgba(231,76,124,.4)}
+.btn-start:active{box-shadow:0 4px 15px rgba(231,76,124,.4)}
+.start-hint{font-size:13px;color:#e74c7c;opacity:.5;margin-top:25px}
+
+#hud{position:fixed;top:0;left:0;right:0;padding:12px 15px;display:flex;justify-content:space-between;align-items:center;z-index:50;background:linear-gradient(180deg,rgba(0,0,0,.35) 0%,transparent 100%)}
+#hud.hidden{display:none}
+.hud-left{display:flex;flex-direction:column;gap:4px}
+.hud-hearts{font-size:18px;letter-spacing:1px}
+.hud-lives{font-size:14px;color:#ff6b6b}
+.hud-score{color:#fff;font-size:16px;font-weight:700;text-shadow:0 1px 5px rgba(0,0,0,.5)}
+.hud-level{color:#ffd700;font-size:13px;font-weight:600}
+.hud-combo{color:#ffeb3b;font-size:13px;font-weight:700;opacity:0;transition:opacity .3s}
+.hud-combo.show{opacity:1}
+
+#dialogScreen{background:rgba(0,0,0,.7);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.dialog-box{background:rgba(255,255,255,.95);border-radius:25px;padding:40px 30px;max-width:320px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.dialog-emoji{font-size:60px;margin-bottom:15px;opacity:0;animation:fadeInUp .6s ease forwards}
+.dialog-text{font-size:18px;color:#333;line-height:1.8;margin-bottom:25px;font-weight:500;min-height:90px}
+.dialog-text .highlight{color:#e74c7c;font-weight:700}
+.dialog-text .typewriter-cursor{display:inline-block;width:2px;height:1em;background:#e74c7c;margin-left:2px;animation:blink .6s step-end infinite;vertical-align:text-bottom}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.btn-next{background:linear-gradient(135deg,#e74c7c,#e91e63);color:#fff;box-shadow:0 5px 15px rgba(231,76,124,.3);padding:12px 40px;font-size:16px;opacity:0;transform:translateY(10px);transition:opacity .5s,transform .5s}
+.btn-next.show{opacity:1;transform:translateY(0)}
+
+#confessionScreen{background:radial-gradient(ellipse at center,#1a0a1e 0%,#0d0015 100%)}
+.confession-container{text-align:center;padding:30px;max-width:360px}
+.confession-hearts{font-size:50px;margin-bottom:20px;animation:heartbeat 1.2s ease-in-out infinite}
+.confession-title{font-size:36px;font-weight:900;background:linear-gradient(135deg,#ff6b9d,#ffa8cc,#ff6b9d);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:30px;line-height:1.4;min-height:100px}
+.confession-title .typewriter-cursor{background:#ff6b9d}
+.confession-name{font-size:20px;color:rgba(255,255,255,.6);margin-top:10px;margin-bottom:30px;font-style:italic;letter-spacing:3px;min-height:30px}
+.confession-name .typewriter-cursor{background:rgba(255,255,255,.5)}
+.confession-msg{font-size:17px;color:rgba(255,255,255,.85);line-height:2;margin-bottom:15px;min-height:120px}
+.confession-msg .em{color:#ff6b9d;font-weight:700;font-size:19px}
+.confession-msg .typewriter-cursor{background:rgba(255,255,255,.7)}
+.btn-yes{background:linear-gradient(135deg,#ff6b9d,#e91e63);color:#fff;box-shadow:0 5px 25px rgba(255,107,157,.5);font-size:20px;padding:16px 60px;animation:glow 2s ease-in-out infinite;opacity:0;transform:translateY(15px)}
+.btn-yes.show{opacity:1;transform:translateY(0);transition:opacity .5s,transform .5s}
+@keyframes glow{0%,100%{box-shadow:0 5px 25px rgba(255,107,157,.5)}50%{box-shadow:0 5px 40px rgba(255,107,157,.8)}}
+.btn-no{background:transparent;color:rgba(255,255,255,.3);border:1px solid rgba(255,255,255,.1);font-size:14px;padding:10px 30px;margin-top:15px;border-radius:50px;cursor:pointer;transition:all .3s;opacity:0}
+.btn-no.show{opacity:1;transition:opacity .5s .3s}
+
+#successScreen{background:radial-gradient(ellipse at center,#1a0a2e 0%,#0d0015 100%)}
+.success-container{text-align:center;padding:30px}
+.success-emoji{font-size:80px;animation:heartbeat 1s ease-in-out infinite}
+.success-title{font-size:32px;font-weight:900;color:#ff6b9d;margin:20px 0;text-shadow:0 0 30px rgba(255,107,157,.5);opacity:0;animation:fadeInUp .8s ease .3s forwards}
+.success-msg{font-size:18px;color:rgba(255,255,255,.8);line-height:2;margin-bottom:10px}
+.success-msg .s-line{opacity:0;transform:translateY(15px);animation:fadeInUp .6s ease forwards}
+.success-msg .s-line:nth-child(1){animation-delay:.6s}
+.success-msg .s-line:nth-child(2){animation-delay:1.2s}
+.success-msg .s-line:nth-child(3){animation-delay:1.8s}
+.success-msg .s-line:nth-child(4){animation-delay:2.4s}
+
+#fireworksCanvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:99;pointer-events:none}
+
+/* 屏幕震动 */
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px)}40%{transform:translateX(5px)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}
+.shake{animation:shake .4s ease}
+
+/* combo 飞字 */
+.combo-text{position:fixed;z-index:60;font-size:28px;font-weight:900;color:#ffd700;text-shadow:0 0 15px rgba(255,215,0,.8);pointer-events:none;animation:comboFly 1s ease forwards}
+@keyframes comboFly{0%{opacity:1;transform:translateY(0) scale(1)}50%{opacity:1;transform:translateY(-40px) scale(1.3)}100%{opacity:0;transform:translateY(-80px) scale(.8)}}
+
+/* 损失提示 */
+.miss-text{position:fixed;z-index:60;font-size:22px;font-weight:700;color:#ff6b6b;text-shadow:0 0 10px rgba(255,107,107,.6);pointer-events:none;animation:missFly .8s ease forwards}
+@keyframes missFly{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-50px)}}
+</style>
+</head>
+<body>
+
+<!-- 开场 -->
+<div class="screen" id="startScreen">
+  <div class="start-heart">💝</div>
+  <div class="start-title">爱的冒险</div>
+  <div class="start-sub">一场关于你我的旅程</div>
+  <button class="btn btn-start" onclick="startLevel1()">开启旅程</button>
+  <div class="start-hint">请在安静的地方打开 ☁️</div>
+</div>
+
+<!-- 游戏HUD -->
+<div id="hud" class="hidden">
+  <div class="hud-left">
+    <span class="hud-hearts" id="hudHearts">♡♡♡♡♡</span>
+    <span class="hud-lives" id="hudLives">❤️❤️❤️</span>
+  </div>
+  <div style="text-align:right">
+    <div class="hud-score">💕 <span id="hudScore">0</span> / <span id="hudTarget">0</span></div>
+    <div class="hud-level" id="hudLevel"></div>
+    <div class="hud-combo" id="hudCombo">Combo x1</div>
+  </div>
+</div>
+
+<!-- 游戏画布 -->
+<canvas id="gameCanvas"></canvas>
+
+<!-- 过渡对话 -->
+<div class="screen hidden" id="dialogScreen">
+  <div class="dialog-box">
+    <div class="dialog-emoji" id="dialogEmoji">🌸</div>
+    <div class="dialog-text" id="dialogText"></div>
+    <button class="btn btn-next" id="dialogBtn" onclick="onDialogNext()">继续</button>
+  </div>
+</div>
+
+<!-- 告白 -->
+<div class="screen hidden" id="confessionScreen">
+  <div class="confession-container">
+    <div class="confession-hearts">💕</div>
+    <div class="confession-title" id="confTitle"></div>
+    <div class="confession-msg" id="confMsg"></div>
+    <div class="confession-name" id="confName"></div>
+    <button class="btn btn-yes" id="yesBtn" onclick="onYes()">我愿意 💕</button><br>
+    <button class="btn-no" id="noBtn">让我想想...</button>
+  </div>
+</div>
+
+<!-- 成功 -->
+<div class="screen hidden" id="successScreen">
+  <canvas id="fireworksCanvas"></canvas>
+  <div class="success-container" style="position:relative;z-index:100">
+    <div class="success-emoji">👫</div>
+    <div class="success-title">我们在一起了！</div>
+    <div class="success-msg">
+      <div class="s-line">从今天起</div>
+      <div class="s-line">我的世界因你而完整 🌍</div>
+      <div class="s-line">每一天都想和你一起度过</div>
+      <div class="s-line" style="color:#ffd700;font-size:22px">❤️ I Love You ❤️</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ====== iOS Safari 兼容 ======
+// Canvas ellipse polyfill (iOS < 15)
+if (!CanvasRenderingContext2D.prototype.ellipse) {
+  CanvasRenderingContext2D.prototype.ellipse = function(x, y, rx, ry, rot, start, end, ccw) {
+    this.save();
+    this.translate(x, y);
+    this.rotate(rot);
+    this.scale(rx, ry);
+    this.arc(0, 0, 1, start, end, ccw);
+    this.restore();
+  };
+}
+
+// 修复 iOS Safari 100vh 包含地址栏的问题
+function fixIOSHeight() {
+  document.documentElement.style.setProperty('--vh', window.innerHeight + 'px');
+}
+fixIOSHeight();
+window.addEventListener('resize', fixIOSHeight);
+window.addEventListener('orientationchange', function() {
+  setTimeout(fixIOSHeight, 100);
+});
+
+// 禁止 iOS Safari 双指缩放和回弹
+document.addEventListener('gesturestart', function(e) { e.preventDefault(); }, { passive: false });
+document.addEventListener('gesturechange', function(e) { e.preventDefault(); }, { passive: false });
+document.addEventListener('gestureend', function(e) { e.preventDefault(); }, { passive: false });
+
+// ====== 全局 ======
+const W = () => window.innerWidth;
+const H = () => window.innerHeight;
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+let animId = null;
+let gameState = 'idle';
+
+function resizeCanvas() {
+  canvas.width = W();
+  canvas.height = H();
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+  if (id) document.getElementById(id).classList.remove('hidden');
+}
+
+// ====== 粒子系统 ======
+let particles = [];
+class Particle {
+  constructor(x, y, color, life) {
+    this.x = x; this.y = y;
+    this.vx = (Math.random() - .5) * 4;
+    this.vy = (Math.random() - .5) * 4 - 2;
+    this.life = life || 40;
+    this.maxLife = this.life;
+    this.color = color || '#ff6b9d';
+    this.size = Math.random() * 4 + 2;
+  }
+  update() {
+    this.x += this.vx;
+    this.y += this.vy;
+    this.vy += .08;
+    this.life--;
+  }
+  draw(c) {
+    const a = this.life / this.maxLife;
+    c.globalAlpha = a;
+    c.fillStyle = this.color;
+    c.beginPath();
+    c.arc(this.x, this.y, this.size * a, 0, Math.PI * 2);
+    c.fill();
+    c.globalAlpha = 1;
+  }
+}
+
+function spawnParticles(x, y, color, count) {
+  for (let i = 0; i < count; i++) particles.push(new Particle(x, y, color));
+}
+
+// ====== 绘制爱心形状 ======
+function drawHeart(c, x, y, size, color, fill = true) {
+  c.save();
+  c.translate(x, y);
+  c.beginPath();
+  c.moveTo(0, size * .3);
+  c.bezierCurveTo(-size, -size * .4, -size, -size, 0, -size * .5);
+  c.bezierCurveTo(size, -size, size, -size * .4, 0, size * .3);
+  c.closePath();
+  if (fill) { c.fillStyle = color; c.fill(); }
+  else { c.strokeStyle = color; c.lineWidth = 2; c.stroke(); }
+  c.restore();
+}
+
+// ====== 游戏数据 ======
+let currentLevel = 0;
+let collected = 0;
+let hearts = [];
+let obstacles = []; // 障碍物
+let catcher = { x: 0, w: 65, h: 20 };
+let spawnTimer = 0;
+let obstacleTimer = 0;
+let floatingHearts = [];
+let lives = 3; // 生命值
+let combo = 0; // 连击
+let maxCombo = 0;
+let missCount = 0;
+let speedMultiplier = 1;
+let invincibleFrames = 0; // 受伤无敌帧 // 动态加速
+
+const levels = [
+  {
+    name: '初遇 · 春风',
+    target: 10,
+    speed: 1.8,
+    spawnRate: 55,
+    obstacleRate: 0, // 第一关无障碍
+    bgColor1: '#fff5f5',
+    bgColor2: '#ffe0ec',
+    emoji: '🌸',
+    preText: '在一个温暖的春天<br>我们<span class="highlight">第一次相遇</span><br>那一刻，心跳漏了一拍...',
+    postText: '那些怦然心动的瞬间<br>原来就是<span class="highlight">喜欢的开始</span>',
+  },
+  {
+    name: '心动 · 夏夜',
+    target: 15,
+    speed: 2.3,
+    spawnRate: 42,
+    obstacleRate: 130, // 偶尔出现障碍
+    bgColor1: '#1a1a3e',
+    bgColor2: '#2d1b69',
+    emoji: '🌙',
+    preText: '夏夜的星空下<br>我们聊了很久很久<br>我知道你就是那个<span class="highlight">对的人</span>',
+    postText: '每一个和你在一起的夜晚<br>星星都格外<span class="highlight">闪耀</span> ✨',
+  },
+  {
+    name: '陪伴 · 秋叶',
+    target: 18,
+    speed: 2.8,
+    spawnRate: 34,
+    obstacleRate: 90,
+    bgColor1: '#3d1c00',
+    bgColor2: '#1a0800',
+    emoji: '🍂',
+    preText: '秋天的落叶纷飞<br>而你一直在我<span class="highlight">身旁</span><br>最好的时光就是有你陪伴',
+    postText: '有你在的日子<br>每一天都是<span class="highlight">最美的风景</span> 🍁',
+  },
+  {
+    name: '守护 · 冬雪',
+    target: 22,
+    speed: 3.3,
+    spawnRate: 28,
+    obstacleRate: 65,
+    bgColor1: '#0a1628',
+    bgColor2: '#1a0a2e',
+    emoji: '❄️',
+    preText: '冬天的寒风凛冽<br>但只要你在身边<br>我的心就是<span class="highlight">温暖</span>的',
+    postText: '经历了四季<br>我更加确定了<br>我想对你说的<span class="highlight">那句话</span>...',
+  },
+];
+
+// ====== 背景漂浮爱心 ======
+function initFloatingHearts() {
+  floatingHearts = [];
+  for (let i = 0; i < 15; i++) {
+    floatingHearts.push({
+      x: Math.random() * W(), y: Math.random() * H(),
+      size: Math.random() * 12 + 6, speed: Math.random() * .5 + .2,
+      alpha: Math.random() * .15 + .05, wobble: Math.random() * Math.PI * 2,
+    });
+  }
+}
+function updateFloatingHearts() {
+  floatingHearts.forEach(h => {
+    h.y -= h.speed; h.wobble += .02; h.x += Math.sin(h.wobble) * .5;
+    if (h.y < -20) { h.y = H() + 20; h.x = Math.random() * W(); }
+  });
+}
+function drawFloatingHearts(c) {
+  floatingHearts.forEach(h => {
+    c.globalAlpha = h.alpha;
+    drawHeart(c, h.x, h.y, h.size, '#ff6b9d');
+    c.globalAlpha = 1;
+  });
+}
+
+// ====== 掉落爱心 ======
+class FallingHeart {
+  constructor(level, mult) {
+    this.x = Math.random() * (W() - 60) + 30;
+    this.y = -30;
+    this.size = Math.random() * 10 + 18;
+    this.speed = level.speed * (Math.random() * .4 + .8) * mult;
+    this.wobble = Math.random() * Math.PI * 2;
+    this.wobbleSpeed = Math.random() * .04 + .02;
+    this.wobbleAmp = Math.random() * 1.5 + 1; // 左右摆幅
+    this.rotation = 0;
+    this.rotSpeed = (Math.random() - .5) * .05;
+    this.alive = true;
+    this.missed = false;
+    const colors = ['#ff6b9d','#ff4081','#e91e63','#ff8a80','#f48fb1','#ff80ab'];
+    this.color = colors[Math.floor(Math.random() * colors.length)];
+  }
+  update() {
+    this.y += this.speed;
+    this.wobble += this.wobbleSpeed;
+    this.x += Math.sin(this.wobble) * this.wobbleAmp;
+    this.rotation += this.rotSpeed;
+    // 爱心过了碗的位置（H()-50）才算漏接，而不是掉出屏幕
+    const missLine = window.innerHeight - 50;
+    if (this.y > missLine && !this.missed) {
+      this.missed = true;
+      onMiss(this.x);
+    }
+    if (this.y > window.innerHeight + 30) {
+      this.alive = false;
+    }
+  }
+  draw(c) {
+    c.save();
+    c.translate(this.x, this.y);
+    c.rotate(this.rotation);
+    c.shadowColor = this.color;
+    c.shadowBlur = 15;
+    drawHeart(c, 0, 0, this.size, this.color);
+    c.shadowBlur = 0;
+    c.globalAlpha = .4;
+    drawHeart(c, -2, -3, this.size * .4, '#fff');
+    c.globalAlpha = 1;
+    c.restore();
+  }
+}
+
+// ====== 障碍物（💔碎心） ======
+class Obstacle {
+  constructor(level, mult) {
+    this.x = Math.random() * (W() - 60) + 30;
+    this.y = -30;
+    this.size = 20;
+    this.speed = level.speed * (Math.random() * .3 + .9) * mult;
+    this.wobble = Math.random() * Math.PI * 2;
+    this.wobbleSpeed = Math.random() * .05 + .02;
+    this.rotation = 0;
+    this.rotSpeed = (Math.random() - .5) * .08;
+    this.alive = true;
+  }
+  update() {
+    this.y += this.speed;
+    this.wobble += this.wobbleSpeed;
+    this.x += Math.sin(this.wobble) * 2;
+    this.rotation += this.rotSpeed;
+    if (this.y > H() + 30) this.alive = false;
+  }
+  draw(c) {
+    c.save();
+    c.translate(this.x, this.y);
+    c.rotate(this.rotation);
+    // 碎心：黑色爱心 + 裂纹
+    c.shadowColor = '#8b0000';
+    c.shadowBlur = 10;
+    drawHeart(c, 0, 0, this.size, '#444');
+    c.shadowBlur = 0;
+    // 裂纹
+    c.strokeStyle = '#ff0000';
+    c.lineWidth = 2;
+    c.beginPath();
+    c.moveTo(-2, -this.size * .3);
+    c.lineTo(2, 0);
+    c.lineTo(-3, this.size * .1);
+    c.lineTo(1, this.size * .25);
+    c.stroke();
+    // 感叹号
+    c.fillStyle = '#ff4444';
+    c.font = 'bold 14px sans-serif';
+    c.textAlign = 'center';
+    c.fillText('!', 0, -this.size * .6);
+    c.restore();
+  }
+}
+
+// ====== 接住篮子 ======
+function drawCatcher(c) {
+  const y = H() - 80;
+  const x = catcher.x;
+  const w = catcher.w;
+
+  const grd = c.createRadialGradient(x, y, 0, x, y, w);
+  grd.addColorStop(0, 'rgba(255,107,157,.3)');
+  grd.addColorStop(1, 'rgba(255,107,157,0)');
+  c.fillStyle = grd;
+  c.beginPath();
+  c.arc(x, y, w, 0, Math.PI * 2);
+  c.fill();
+
+  c.fillStyle = 'rgba(255,255,255,.9)';
+  c.beginPath();
+  c.ellipse(x, y, w / 2, 12, 0, 0, Math.PI);
+  c.fill();
+
+  c.fillStyle = 'rgba(255,107,157,.2)';
+  c.beginPath();
+  c.ellipse(x, y, w / 2, 8, 0, 0, Math.PI * 2);
+  c.fill();
+
+  drawHeart(c, x, y - 5, 10, '#ff6b9d');
+}
+
+// ====== 触控 ======
+let touchX = W() / 2;
+function onMove(x) { touchX = x; }
+// iOS Safari 需要在 touchmove 上 preventDefault 来禁止滚动
+document.addEventListener('touchmove', function(e) { e.preventDefault(); if (e.touches[0]) onMove(e.touches[0].clientX); }, { passive: false });
+document.addEventListener('touchstart', function(e) { if (e.touches[0]) onMove(e.touches[0].clientX); }, { passive: true });
+document.addEventListener('mousemove', function(e) { onMove(e.clientX); });
+
+// ====== HUD ======
+function updateHUD() {
+  const lv = levels[currentLevel];
+  const fullH = collected;
+  const emptyH = lv.target - collected;
+  document.getElementById('hudHearts').textContent = '❤️'.repeat(Math.min(fullH, lv.target)) + '♡'.repeat(Math.max(emptyH, 0));
+  document.getElementById('hudScore').textContent = collected;
+  document.getElementById('hudTarget').textContent = lv.target;
+  document.getElementById('hudLevel').textContent = lv.name;
+  document.getElementById('hudLives').textContent = '❤️'.repeat(lives) + '🖤'.repeat(3 - lives);
+
+  const comboEl = document.getElementById('hudCombo');
+  if (combo >= 3) {
+    comboEl.textContent = `🔥 Combo x${combo}`;
+    comboEl.classList.add('show');
+  } else {
+    comboEl.classList.remove('show');
+  }
+}
+
+// ====== 漏接 ======
+function onMiss(x) {
+  combo = 0;
+  missCount++; // 连续漏接计数
+  updateHUD();
+
+  // 浮动提示
+  const el = document.createElement('div');
+  el.className = 'miss-text';
+  el.textContent = 'Miss!';
+  el.style.left = x + 'px';
+  el.style.top = (H() - 100) + 'px';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 800);
+
+  // 连续漏接3个扣1条命
+  if (missCount >= 3 && lives > 0) {
+    missCount = 0;
+    lives--;
+    updateHUD();
+    document.body.classList.add('shake');
+    setTimeout(() => document.body.classList.remove('shake'), 400);
+
+    if (lives <= 0) {
+      onLifeLost();
+    }
+  }
+}
+
+// ====== 碰到障碍物 ======
+function onHitObstacle(x, y) {
+  if (invincibleFrames > 0) return; // 无敌帧内不扣血
+  combo = 0;
+  lives--;
+  invincibleFrames = 60; // 约1秒无敌
+  updateHUD();
+  spawnParticles(x, y, '#ff0000', 15);
+
+  document.body.classList.add('shake');
+  setTimeout(() => document.body.classList.remove('shake'), 400);
+
+  const el = document.createElement('div');
+  el.className = 'miss-text';
+  el.textContent = '💔 -1';
+  el.style.left = x + 'px';
+  el.style.top = y + 'px';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 800);
+
+  if (lives <= 0) {
+    onLifeLost();
+  }
+}
+
+// ====== 生命耗尽 - 重试本关 ======
+function onLifeLost() {
+  gameState = 'paused';
+  cancelAnimationFrame(animId);
+  document.getElementById('hud').classList.add('hidden');
+
+  setTimeout(() => {
+    showDialog('💪', '别灰心！<br><span class="highlight">爱情路上难免坎坷</span><br>再试一次吧～', '再来一次', () => {
+      startPlaying();
+    });
+  }, 300);
+}
+
+// ====== Combo特效 ======
+function showComboEffect(x, y) {
+  if (combo >= 3 && combo % 2 === 1) {
+    const el = document.createElement('div');
+    el.className = 'combo-text';
+    el.textContent = combo >= 10 ? `Perfect x${combo}!` : `Combo x${combo}!`;
+    el.style.left = (x - 50) + 'px';
+    el.style.top = (y - 30) + 'px';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 1000);
+  }
+}
+
+// ====== 主游戏循环 ======
+let frameCount = 0;
+function gameLoop() {
+  if (gameState !== 'playing') return;
+  animId = requestAnimationFrame(gameLoop);
+  frameCount++;
+  if (invincibleFrames > 0) invincibleFrames--;
+
+  const lv = levels[currentLevel];
+  ctx.clearRect(0, 0, W(), H());
+
+  // 背景
+  const bg = ctx.createLinearGradient(0, 0, 0, H());
+  bg.addColorStop(0, lv.bgColor1);
+  bg.addColorStop(1, lv.bgColor2);
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W(), H());
+
+  updateFloatingHearts();
+  drawFloatingHearts(ctx);
+
+  // 随时间缓慢加速
+  speedMultiplier = 1 + (frameCount / 4000) * 0.25;
+
+  // 生成爱心
+  spawnTimer++;
+  if (spawnTimer >= lv.spawnRate) {
+    spawnTimer = 0;
+    hearts.push(new FallingHeart(lv, speedMultiplier));
+  }
+
+  // 生成障碍物
+  if (lv.obstacleRate > 0) {
+    obstacleTimer++;
+    if (obstacleTimer >= lv.obstacleRate) {
+      obstacleTimer = 0;
+      obstacles.push(new Obstacle(lv, speedMultiplier));
+    }
+  }
+
+  // 更新
+  hearts.forEach(h => h.update());
+  obstacles.forEach(o => o.update());
+
+  // 移动篮子
+  catcher.x += (touchX - catcher.x) * .15;
+
+  // 碰撞 - 爱心（只在爱心落到碗的Y范围内才判定）
+  const cy = H() - 80;
+  const catchHalfW = catcher.w / 2;
+  hearts.forEach(h => {
+    if (!h.alive) return;
+    const dx = Math.abs(h.x - catcher.x);
+    const dy = h.y - cy; // 正值=在碗下方，负值=在碗上方
+    // 爱心必须在碗的正上方到稍下方范围，且水平距离在碗内
+    if (dx < catchHalfW && dy > -15 && dy < 15) {
+      h.alive = false;
+      h.missed = true; // 不触发miss
+      combo++;
+      if (combo > maxCombo) maxCombo = combo;
+      missCount = 0;
+
+      // combo >= 5 时一个算两个
+      const gain = combo >= 5 ? 2 : 1;
+      collected += gain;
+
+      spawnParticles(h.x, h.y, h.color, 12);
+      showComboEffect(h.x, h.y);
+
+      // combo加成提示
+      if (gain === 2) {
+        const el = document.createElement('div');
+        el.className = 'combo-text';
+        el.textContent = '💕 x2!';
+        el.style.left = (h.x - 30) + 'px';
+        el.style.top = (h.y - 50) + 'px';
+        el.style.color = '#ff6b9d';
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 1000);
+      }
+
+      updateHUD();
+
+      if (collected >= lv.target) {
+        gameState = 'paused';
+        cancelAnimationFrame(animId);
+        setTimeout(() => showLevelComplete(), 500);
+      }
+    }
+  });
+
+  // 碰撞 - 障碍物（只在障碍物真正到达碗位置时判定）
+  obstacles.forEach(o => {
+    if (!o.alive) return;
+    const dx = Math.abs(o.x - catcher.x);
+    const dy = o.y - cy;
+    // 障碍物必须在碗附近才扣血，避免还在空中就误判
+    if (dx < catchHalfW - 5 && dy > -10 && dy < 12) {
+      o.alive = false;
+      onHitObstacle(o.x, o.y);
+    }
+  });
+
+  hearts = hearts.filter(h => h.alive);
+  obstacles = obstacles.filter(o => o.alive);
+
+  hearts.forEach(h => h.draw(ctx));
+  obstacles.forEach(o => o.draw(ctx));
+  drawCatcher(ctx);
+
+  particles.forEach(p => { p.update(); p.draw(ctx); });
+  particles = particles.filter(p => p.life > 0);
+}
+
+// ====== 打字机效果 ======
+let typewriterTimer = null;
+function typewriterEffect(element, html, callback) {
+  // 解析HTML，保留标签
+  const div = document.createElement('div');
+  div.innerHTML = html;
+  const nodes = [];
+
+  function walk(node) {
+    if (node.nodeType === 3) { // 文本
+      var chars = Array.from(node.textContent);
+      for (var ci = 0; ci < chars.length; ci++) {
+        nodes.push({ type: 'char', char: chars[ci] });
+      }
+    } else if (node.nodeType === 1) { // 元素
+      nodes.push({ type: 'openTag', tag: node.tagName.toLowerCase(), className: node.className, attrs: node.outerHTML.match(/^<[^>]+>/)[0] });
+      for (const child of node.childNodes) walk(child);
+      nodes.push({ type: 'closeTag', tag: node.tagName.toLowerCase() });
+    }
+  }
+  for (const child of div.childNodes) walk(child);
+
+  let output = '';
+  let i = 0;
+  const cursor = '<span class="typewriter-cursor"></span>';
+
+  element.innerHTML = cursor;
+
+  if (typewriterTimer) clearInterval(typewriterTimer);
+  typewriterTimer = setInterval(() => {
+    if (i >= nodes.length) {
+      clearInterval(typewriterTimer);
+      typewriterTimer = null;
+      element.innerHTML = output;
+      if (callback) callback();
+      return;
+    }
+    const n = nodes[i];
+    if (n.type === 'char') {
+      output += n.char;
+    } else if (n.type === 'openTag') {
+      output += n.attrs;
+    } else if (n.type === 'closeTag') {
+      output += `</${n.tag}>`;
+    }
+    element.innerHTML = output + cursor;
+    i++;
+  }, n => n && n.type === 'char' ? 50 : 0);
+
+  // 修正：定时器间隔固定
+  clearInterval(typewriterTimer);
+  typewriterTimer = setInterval(() => {
+    if (i >= nodes.length) {
+      clearInterval(typewriterTimer);
+      typewriterTimer = null;
+      element.innerHTML = output;
+      if (callback) callback();
+      return;
+    }
+    const n = nodes[i];
+    if (n.type === 'char') {
+      output += n.char;
+      element.innerHTML = output + cursor;
+    } else if (n.type === 'openTag') {
+      output += n.attrs;
+    } else if (n.type === 'closeTag') {
+      output += `</${n.tag}>`;
+    }
+    i++;
+  }, 55);
+}
+
+// ====== 对话流程 ======
+let dialogCallback = null;
+
+function showDialog(emoji, text, btnText, cb) {
+  const emojiEl = document.getElementById('dialogEmoji');
+  const textEl = document.getElementById('dialogText');
+  const btnEl = document.getElementById('dialogBtn');
+
+  emojiEl.textContent = emoji;
+  emojiEl.style.animation = 'none';
+  void emojiEl.offsetHeight; // reflow
+  emojiEl.style.animation = 'fadeInUp .6s ease forwards';
+
+  textEl.innerHTML = '';
+  btnEl.classList.remove('show');
+  btnEl.textContent = btnText || '继续';
+  dialogCallback = cb;
+
+  showScreen('dialogScreen');
+
+  // 打字机
+  setTimeout(() => {
+    typewriterEffect(textEl, text, () => {
+      btnEl.classList.add('show');
+    });
+  }, 500);
+}
+
+function onDialogNext() {
+  if (typewriterTimer) {
+    // 快进
+    clearInterval(typewriterTimer);
+    typewriterTimer = null;
+    const textEl = document.getElementById('dialogText');
+    // 直接显示完整
+    document.getElementById('dialogBtn').classList.add('show');
+    return;
+  }
+  showScreen(null);
+  if (dialogCallback) dialogCallback();
+}
+
+function startLevel1() {
+  currentLevel = 0;
+  showLevelIntro();
+}
+
+function showLevelIntro() {
+  const lv = levels[currentLevel];
+  showDialog(lv.emoji, lv.preText, '开始收集', () => {
+    startPlaying();
+  });
+}
+
+function startPlaying() {
+  const lv = levels[currentLevel];
+  collected = 0;
+  hearts = [];
+  obstacles = [];
+  particles = [];
+  spawnTimer = 0;
+  obstacleTimer = 0;
+  frameCount = 0;
+  speedMultiplier = 1;
+  combo = 0;
+  missCount = 0;
+  lives = 3;
+  invincibleFrames = 0;
+  catcher.x = W() / 2;
+  touchX = W() / 2;
+
+  document.getElementById('hud').classList.remove('hidden');
+  updateHUD();
+  initFloatingHearts();
+
+  gameState = 'playing';
+  resizeCanvas();
+  gameLoop();
+}
+
+function showLevelComplete() {
+  document.getElementById('hud').classList.add('hidden');
+  const lv = levels[currentLevel];
+
+  showDialog('🎉', lv.postText, currentLevel < levels.length - 1 ? '继续旅程' : '看看他想说什么...', () => {
+    currentLevel++;
+    if (currentLevel < levels.length) {
+      showLevelIntro();
+    } else {
+      showConfession();
+    }
+  });
+}
+
+// ====== 告白页 ======
+// ====== 告白页打字机 ======
+// 单独的打字机实例（不影响dialog的那个）
+function confessionTypewriter(element, text, speed, callback) {
+  let i = 0;
+  const cursor = '<span class="typewriter-cursor"></span>';
+  element.innerHTML = cursor;
+
+  const timer = setInterval(() => {
+    if (i >= text.length) {
+      clearInterval(timer);
+      element.innerHTML = element._finalHTML || text;
+      if (callback) callback();
+      return;
+    }
+    // 处理HTML标签：跳过整个标签
+    if (text[i] === '<') {
+      const closeIdx = text.indexOf('>', i);
+      if (closeIdx !== -1) {
+        i = closeIdx + 1;
+      } else {
+        i++;
+      }
+    } else {
+      i++;
+    }
+    element.innerHTML = text.substring(0, i) + cursor;
+  }, speed);
+  return timer;
+}
+
+function showConfession() {
+  showScreen('confessionScreen');
+
+  const titleEl = document.getElementById('confTitle');
+  const msgEl = document.getElementById('confMsg');
+  const nameEl = document.getElementById('confName');
+
+  titleEl.innerHTML = '';
+  msgEl.innerHTML = '';
+  nameEl.innerHTML = '';
+  document.getElementById('yesBtn').classList.remove('show');
+  document.getElementById('noBtn').classList.remove('show');
+
+  // 第1步：标题打字机（慢速）
+  const titleText = '你愿意\n做我的另一半吗？';
+  setTimeout(() => {
+    confessionTypewriter(titleEl, titleText, 150, () => {
+      // 第2步：正文打字机（慢速）
+      const msgText = '从相遇到现在\n你一直是我心里的<span class="em">唯一</span>\n每一颗收集的爱心\n都是我对你的<span class="em">心意</span>';
+      msgEl._finalHTML = '从相遇到现在<br>你一直是我心里的<span class="em">唯一</span><br>每一颗收集的爱心<br>都是我对你的<span class="em">心意</span>';
+
+      setTimeout(() => {
+        confessionTypewriter(msgEl, msgText, 120, () => {
+          msgEl.innerHTML = msgEl._finalHTML;
+          // 第3步：名字打字机（更慢）
+          setTimeout(() => {
+            confessionTypewriter(nameEl, '—— 天下第一帅', 180, () => {
+              // 第4步：显示按钮
+              setTimeout(() => {
+                document.getElementById('yesBtn').classList.add('show');
+                document.getElementById('noBtn').classList.add('show');
+              }, 800);
+            });
+          }, 600);
+        });
+      }, 500);
+    });
+  }, 1000);
+
+  // "让我想想" 逃跑
+  const noBtn = document.getElementById('noBtn');
+  let noPressCount = 0;
+  const noTexts = ['让我想想...', '再想想？', '真的要想吗？', '不许想了！', '💕', '❤️'];
+
+  noBtn.onclick = (e) => {
+    e.preventDefault();
+    noPressCount++;
+    if (noPressCount < noTexts.length) {
+      noBtn.textContent = noTexts[noPressCount];
+    }
+    const maxX = W() - 120;
+    const maxY = H() - 60;
+    const rx = Math.random() * maxX;
+    const ry = Math.random() * maxY * .3 + maxY * .6;
+    noBtn.style.position = 'fixed';
+    noBtn.style.left = rx + 'px';
+    noBtn.style.top = ry + 'px';
+    noBtn.style.zIndex = '200';
+    noBtn.style.transition = 'all .3s ease';
+
+    if (noPressCount >= 4) {
+      noBtn.style.opacity = '0';
+      noBtn.style.pointerEvents = 'none';
+    }
+  };
+
+  noBtn.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    noBtn.click();
+  });
+}
+
+// ====== 我愿意 ======
+function onYes() {
+  showScreen('successScreen');
+  launchFireworks();
+  startSuccessHearts();
+}
+
+// ====== 烟花 ======
+function launchFireworks() {
+  const fc = document.getElementById('fireworksCanvas');
+  fc.width = W();
+  fc.height = H();
+  const fctx = fc.getContext('2d');
+
+  let fireworks = [];
+  let fParticles = [];
+
+  class Firework {
+    constructor() {
+      this.x = Math.random() * W();
+      this.y = H();
+      this.targetY = Math.random() * H() * .5 + 50;
+      this.speed = Math.random() * 3 + 4;
+      this.alive = true;
+      this.color = `hsl(${Math.random() * 60 + 330}, 100%, 70%)`;
+    }
+    update() {
+      this.y -= this.speed;
+      if (this.y <= this.targetY) { this.alive = false; this.explode(); }
+    }
+    explode() {
+      const count = 40 + Math.random() * 30;
+      for (let i = 0; i < count; i++) {
+        const angle = (Math.PI * 2 * i) / count;
+        const speed = Math.random() * 4 + 2;
+        fParticles.push({
+          x: this.x, y: this.y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+          life: 60 + Math.random() * 20, maxLife: 80, color: this.color, size: Math.random() * 3 + 1,
+        });
+      }
+      for (let i = 0; i < 20; i++) {
+        const t = (Math.PI * 2 * i) / 20;
+        const hx = 16 * Math.pow(Math.sin(t), 3);
+        const hy = -(13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t));
+        fParticles.push({
+          x: this.x, y: this.y, vx: hx * .3, vy: hy * .3,
+          life: 70, maxLife: 70, color: '#ff6b9d', size: 3,
+        });
+      }
+    }
+    draw(c) {
+      c.fillStyle = this.color;
+      c.beginPath();
+      c.arc(this.x, this.y, 3, 0, Math.PI * 2);
+      c.fill();
+    }
+  }
+
+  let fTimer = 0;
+  function fLoop() {
+    requestAnimationFrame(fLoop);
+    fctx.fillStyle = 'rgba(0,0,0,.15)';
+    fctx.fillRect(0, 0, W(), H());
+
+    fTimer++;
+    if (fTimer % 25 === 0) fireworks.push(new Firework());
+
+    fireworks.forEach(f => { f.update(); if (f.alive) f.draw(fctx); });
+    fireworks = fireworks.filter(f => f.alive);
+
+    fParticles.forEach(p => {
+      p.x += p.vx; p.y += p.vy; p.vy += .05; p.vx *= .98; p.life--;
+      const a = p.life / p.maxLife;
+      fctx.globalAlpha = a;
+      fctx.fillStyle = p.color;
+      fctx.beginPath();
+      fctx.arc(p.x, p.y, p.size * a, 0, Math.PI * 2);
+      fctx.fill();
+      fctx.globalAlpha = 1;
+    });
+    fParticles = fParticles.filter(p => p.life > 0);
+  }
+  fLoop();
+}
+
+function startSuccessHearts() {
+  setInterval(() => {
+    const el = document.createElement('div');
+    el.textContent = ['❤️','💕','💗','💖','💘','✨'][Math.floor(Math.random() * 6)];
+    el.style.cssText = `position:fixed;font-size:${Math.random()*20+15}px;left:${Math.random()*100}%;bottom:-30px;z-index:101;pointer-events:none;animation:floatUp ${Math.random()*3+3}s linear forwards;opacity:.8`;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 6000);
+  }, 300);
+
+  const style = document.createElement('style');
+  style.textContent = `@keyframes floatUp{0%{transform:translateY(0) rotate(0deg);opacity:.8}100%{transform:translateY(-${H()+50}px) rotate(${Math.random()>.5?'':'-'}360deg);opacity:0}}`;
+  document.head.appendChild(style);
+}
+</script>
+</body>
+</html>
