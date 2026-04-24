@@ -281,7 +281,7 @@ const levels = [
   {
     name: '心动 · 夏夜',
     target: 15,
-    speed: 2.07,
+    speed: 1.76,
     spawnRate: 42,
     obstacleRate: 130, // 偶尔出现障碍
     bgColor1: '#1a1a3e',
@@ -293,7 +293,7 @@ const levels = [
   {
     name: '陪伴 · 秋叶',
     target: 18,
-    speed: 2.52,
+    speed: 2.14,
     spawnRate: 34,
     obstacleRate: 90,
     bgColor1: '#3d1c00',
@@ -305,7 +305,7 @@ const levels = [
   {
     name: '守护 · 冬雪',
     target: 22,
-    speed: 2.97,
+    speed: 2.52,
     spawnRate: 28,
     obstacleRate: 65,
     bgColor1: '#0a1628',
@@ -591,8 +591,8 @@ function gameLoop() {
   updateFloatingHearts();
   drawFloatingHearts(ctx);
 
-  // 随时间缓慢加速
-  speedMultiplier = 1 + (frameCount / 4000) * 0.25;
+  // 随时间缓慢加速（已削弱：加速更慢，且设上限+15%）
+  speedMultiplier = Math.min(1.15, 1 + (frameCount / 12000) * 0.25);
 
   // 生成爱心
   spawnTimer++;
